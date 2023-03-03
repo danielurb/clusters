@@ -5,18 +5,25 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef struct
+typedef struct Position
 {
     short x;
     short y;
 } Position;
+
+typedef struct Cluster
+{
+    unsigned short color;
+    bool visit;
+} Cluster;
+
 
 #define SIZE 256
 
 int top = -1;
 Position stack[SIZE];
 
-void push(Position a)
+void push(Position pos)
 {
     if (top == SIZE - 1)
     {
@@ -25,11 +32,11 @@ void push(Position a)
     else
     {
         top++;
-        stack[top] = a;
+        stack[top] = pos;
     }
 }
 
-void pop(Position *b)
+void pop(Position *pos)
 {
     if (top == -1)
     {
@@ -37,128 +44,25 @@ void pop(Position *b)
     }
     else
     {
-        // printf("\nPopped element: %d", inp_array[top]);
-        b->x = stack[top].x;
-        b->y = stack[top].y;
+        *pos = stack[top];
         top--;
     }
 }
 
-unsigned short **writeToArray(FILE *file, char *fileFormat, int width, int height);
-void countClusters(unsigned short **array, int width, int height);
-void freeArray(void **arrayP, int size);
+Cluster **writeToArray(FILE *file, char *fileFormat, int width, int height);
+void countClusters(Cluster **array, int width, int height);
+void freeArray(void **array, int size);
 void SkipComments(FILE *fp);
-void printArray(unsigned short *array[], int width, int height);
+void printArray(Cluster *array[], int width, int height);
 
-void countClusters(unsigned short **array, int width, int height)
-{
-    bool **visited = (bool **)malloc(sizeof(bool *) * height);
-    for (int i = 0; i < height; i++)
-    {
-        visited[i] = (bool *)calloc(width, sizeof(bool));
-        // visited[i] = (bool *)malloc(sizeof(bool) * width);
-        // memset(visited[i], -1, sizeof(bool) * width);
-    }
-
-    // printf("\n");
-    // for (int i = 0; i < height; i++)
-    // {
-    //     printf("%3d) ", i + 1);
-    //     for (int j = 0; j < width; j++)
-    //     {
-    //         printf("%s ", visited[i][j] ? "true" : "false");
-    //     }
-    //     printf("\n");
-    // }
-
-    for (int x = 0; x < height; x++)
-    {
-        for (int y = 0; y < width; y++)
-        {
-
-            if (!visited[x][y])
-            {
-                int color = array[x][y];
-                int count = 1;
-                Position pos = {x, y};
-                push(pos);
-                visited[x][y] = true;
-
-                while (top > -1)
-                {
-                    Position cluster;
-                    pop(&cluster);
-                    int pX = cluster.x;
-                    int pY = cluster.y;
-                    // visited[pX][pY] = true;
-
-                    // printf("\n");
-                    // for (int i = 0; i < height; i++)
-                    // {
-                    //     printf("%3d) ", i + 1);
-                    //     for (int j = 0; j < width; j++)
-                    //     {
-                    //         // printf("%s ", visited[i][j] ? "true" : "false");
-                    //         printf("%d ", visited[i][j]);
-                    //     }
-                    //     printf("\n");
-                    // }
-
-                    // above
-                    if (pX > 0 && !visited[pX - 1][pY] && array[pX - 1][pY] == color)
-                    {
-                        push((Position){pX - 1, pY});
-                        visited[pX - 1][pY] = true;
-                        count++;
-                    }
-                    // left
-                    if (pY > 0 && !visited[pX][pY - 1] && array[pX][pY - 1] == color)
-                    {
-                        push((Position){pX, pY - 1});
-                        visited[pX][pY - 1] = true;
-                        count++;
-                    }
-                    // right
-                    if (pY < width - 1 && !visited[pX][pY + 1] && array[pX][pY + 1] == color)
-                    {
-                        push((Position){pX, pY + 1});
-                        visited[pX][pY + 1] = true;
-
-                        count++;
-                    }
-                    // bottom
-                    if (pX < height - 1 && !visited[pX + 1][pY] && array[pX + 1][pY] == color)
-                    {
-                        push((Position){pX + 1, pY});
-                        visited[pX + 1][pY] = true;
-                        count++;
-                    }
-                }
-                printf("top %d, color: %d %d times\n", top, color, count);
-            }
-        }
-    }
-
-    // printf("\n");
-    // for (int i = 0; i < height; i++)
-    // {
-    //     printf("%3d) ", i + 1);
-    //     for (int j = 0; j < width; j++)
-    //     {
-    //         printf("%3d ", label[i][j]);
-    //     }
-    //     printf("\n");
-    // }
-    freeArray((void *)visited, height);
-}
 
 int main(/*int argc, char **argv*/)
 {
     FILE *file = NULL;
     char fileFormat[3];
     int width, height, colors;
-    char *filename = "img1.pbm";
-    // char *filename = "img2.pbm";
+    // char *filename = "img1.pbm";
+    char *filename = "img2.pbm";
 
     // char *filename = "feep.pbm";
     // char *filename = "img3.pgm";
@@ -192,14 +96,71 @@ int main(/*int argc, char **argv*/)
 
     printf("File format: %s, width: %d, height: %d, colors: %d\n", fileFormat, width, height, colors);
 
-    unsigned short **array = writeToArray(file, fileFormat, width, height);
+    Cluster **array = writeToArray(file, fileFormat, width, height);
     printArray(array, width, height);
-
     countClusters(array, width, height);
-
-    freeArray((void *)array, height);
+    freeArray((void*)array, height);
     fclose(file);
     return 0;
+}
+
+
+void countClusters(Cluster **array, int width, int height)
+{
+    for (int x = 0; x < height; x++)
+    {
+        for (int y = 0; y < width; y++)
+        {
+
+            if (!array[x][y].visit)
+            {
+                int color = array[x][y].color;
+                int count = 1;
+                Position pos = {x, y};
+                push(pos);
+                array[x][y].visit = true;
+
+                while (top > -1)
+                {
+                    Position cluster;
+                    pop(&cluster);
+                    int X = cluster.x;
+                    int Y = cluster.y;
+
+                    // above
+                    if (X > 0 && !array[X - 1][Y].visit && array[X - 1][Y].color == color)
+                    {
+                        push((Position){X - 1, Y});
+                        array[X - 1][Y].visit = true;
+                        count++;
+                    }
+                    // left
+                    if (Y > 0 && !array[X][Y - 1].visit && array[X][Y - 1].color == color)
+                    {
+                        push((Position){X, Y - 1});
+                        array[X][Y - 1].visit = true;
+                        count++;
+                    }
+                    // right
+                    if (Y < width - 1 && !array[X][Y + 1].visit && array[X][Y + 1].color == color)
+                    {
+                        push((Position){X, Y + 1});
+                        array[X][Y + 1].visit = true;
+
+                        count++;
+                    }
+                    // bottom
+                    if (X < height - 1 && !array[X + 1][Y].visit && array[X + 1][Y].color == color)
+                    {
+                        push((Position){X + 1, Y});
+                        array[X + 1][Y].visit = true;
+                        count++;
+                    }
+                }
+                printf("top %d, color: %d %d times\n", top, color, count);
+            }
+        }
+    }
 }
 
 void SkipComments(FILE *fp)
@@ -219,25 +180,25 @@ void SkipComments(FILE *fp)
     }
 }
 
-void printArray(unsigned short *array[], int width, int height)
+void printArray(Cluster *array[], int width, int height)
 {
     for (int i = 0; i < height; i++)
     {
         printf("%3d) ", i + 1);
         for (int j = 0; j < width; j++)
         {
-            printf("%3d ", array[i][j]);
+            printf("%3d ", array[i][j].color);
         }
         printf("\n");
     }
 }
 
-unsigned short **writeToArray(FILE *file, char *fileFormat, int width, int height)
+Cluster **writeToArray(FILE *file, char *fileFormat, int width, int height)
 {
-    unsigned short **array = (unsigned short **)malloc(sizeof(unsigned short *) * height);
+    Cluster **array = (Cluster **)malloc(sizeof(Cluster *) * height);
     for (int i = 0; i < height; i++)
     {
-        array[i] = (unsigned short *)malloc(sizeof(unsigned short) * width);
+        array[i] = (Cluster *)calloc(sizeof(Cluster), width);
     }
 
     unsigned char c;
@@ -253,7 +214,7 @@ unsigned short **writeToArray(FILE *file, char *fileFormat, int width, int heigh
                 {
                     if (counter < width)
                     {
-                        array[i][counter] = (c >> ctr) & 1;
+                        array[i][counter].color = (c >> ctr) & 1;
                     }
                     else
                     {
@@ -271,19 +232,19 @@ unsigned short **writeToArray(FILE *file, char *fileFormat, int width, int heigh
             for (int j = 0; j < width; j++)
             {
                 fscanf(file, "%c", &c);
-                array[i][j] = c;
+                array[i][j].color = c;
             }
         }
     }
     return array;
 }
 
-void freeArray(void **arrayP, int size)
+void freeArray(void **array, int size)
 {
     for (int i = 0; i < size; i++)
     {
-        free(arrayP[i]);
+        free(array[i]);
     }
-    free(arrayP);
-    arrayP = NULL;
+    free(array);
+    array = NULL;
 }
