@@ -29,7 +29,7 @@ void pop(Position *pos)
     }
 }
 
-void countClusters(Cluster **array, int width, int height, char *filename)
+void countColors(Color **array, int width, int height, char *filename)
 {
     Node *head = NULL;
     Node *newNodeP = NULL;
@@ -48,10 +48,10 @@ void countClusters(Cluster **array, int width, int height, char *filename)
 
                 while (top > -1)
                 {
-                    Position cluster;
-                    pop(&cluster);
-                    int X = cluster.x;
-                    int Y = cluster.y;
+                    Position Color;
+                    pop(&Color);
+                    int X = Color.x;
+                    int Y = Color.y;
 
                     // above
                     if (X > 0 && !array[X - 1][Y].visit && array[X - 1][Y].color == color)
@@ -83,12 +83,12 @@ void countClusters(Cluster **array, int width, int height, char *filename)
                     }
                 }
                 newNodeP = newNode(color, count);
-                insertion_sort(&head, newNodeP);
+                insertionSort(&head, newNodeP);
             }
         }
     }
-    save_results("results.txt", filename, head);
-    free_list(&head);
+    saveResults("results.txt", filename, head);
+    freeList(&head);
 }
 
 void SkipComments(FILE *fp)
@@ -108,7 +108,7 @@ void SkipComments(FILE *fp)
     }
 }
 
-void printArray(Cluster *array[], int width, int height)
+void printArray(Color **array, int width, int height)
 {
     for (int i = 0; i < height; i++)
     {
@@ -121,12 +121,12 @@ void printArray(Cluster *array[], int width, int height)
     }
 }
 
-Cluster **writeToArray(FILE *file, char *fileFormat, int width, int height)
+Color **writeToArray(FILE *file, char *fileFormat, int width, int height)
 {
-    Cluster **array = (Cluster **)malloc(sizeof(Cluster *) * height);
+    Color **array = (Color **)malloc(sizeof(Color *) * height);
     for (int i = 0; i < height; i++)
     {
-        array[i] = (Cluster *)calloc(sizeof(Cluster), width);
+        array[i] = (Color *)calloc(sizeof(Color), width);
     }
 
     unsigned char c;
@@ -198,29 +198,28 @@ Node *newNode(unsigned short color, unsigned short count)
 }
 
 // function to insert data in sorted position
-void insertion_sort(Node **head, Node *newNode)
+void insertionSort(Node **head, Node *newNode)
 {
-    // If linked list is empty
-    if (*head == NULL || (*head)->color >= newNode->color)
+    // If linked list is empty or color of head is higher than color of new node
+    if (*head == NULL || (*head)->color > newNode->color)
     {
         newNode->next = *head;
         *head = newNode;
-        return;
     }
-
-    // Locate the node before insertion
-    Node *current = *head;
-    while (current->next != NULL && current->next->color < newNode->color)
+    else
     {
-        current = current->next;
+        Node *current = *head;
+        while (current->next != NULL && current->next->color <= newNode->color)
+        {
+            current = current->next;
+        }
+        newNode->next = current->next;
+        current->next = newNode;
     }
-
-    newNode->next = current->next;
-    current->next = newNode;
 }
 
 // function to free allocated memory of linked list
-void free_list(Node **head)
+void freeList(Node **head)
 {
     Node *current = NULL;
     while (*head)
@@ -232,13 +231,12 @@ void free_list(Node **head)
     head = NULL;
 }
 
-void save_results(char *result_file_name, char *bitmap_file_name, Node *head)
+void saveResults(char *resultFileName, char *bitmapFileName, Node *head)
 {
-    FILE *out = fopen(result_file_name, "a");
-    fprintf(out, "%s\n", bitmap_file_name);
+    FILE *out = fopen(resultFileName, "a");
+    fprintf(out, "%s\n", bitmapFileName);
     fprintf(out, "color : size\n");
-    Node *current = head;
-    fprintf(out, "%5d : %d", current->color, current->count);
+    fprintf(out, "%5d : %d", head->color, head->count);
 
     while (head->next)
     {

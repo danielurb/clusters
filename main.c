@@ -49,8 +49,8 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
-    Cluster **array = writeToArray(file, fileFormat, width, height);
-    countClusters(array, width, height, filename);
+    Color **array = writeToArray(file, fileFormat, width, height);
+    countColors(array, width, height, filename);
     freeArray((void *)array, height);
     fclose(file);
     return 0;

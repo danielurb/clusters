@@ -1,7 +1,0 @@
-https://www.youtube.com/watch?v=UtckqNKZFrA
-https://www.ocf.berkeley.edu/~fricke/projects/hoshenkopelman/hoshenkopelman.html
-https://en.wikipedia.org/wiki/Hoshen%E2%80%93Kopelman_algorithm
-https://www.ocf.berkeley.edu/~fricke/projects/hoshenkopelman/hk.c
-
-hd -bc img2.pbm
-xxd -b img2.pbm
