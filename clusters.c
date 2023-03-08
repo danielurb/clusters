@@ -1,96 +1,6 @@
 #include "clusters.h"
 
-int top = -1;
-Position stack[SIZE];
-
-void push(Position pos)
-{
-    if (top == SIZE - 1)
-    {
-        printf("\nOverflow!!");
-    }
-    else
-    {
-        top++;
-        stack[top] = pos;
-    }
-}
-
-void pop(Position *pos)
-{
-    if (top == -1)
-    {
-        printf("\nUnderflow!!");
-    }
-    else
-    {
-        *pos = stack[top];
-        top--;
-    }
-}
-
-void countColors(Color **array, int width, int height, char *filename)
-{
-    Node *head = NULL;
-    Node *newNodeP = NULL;
-
-    for (int x = 0; x < height; x++)
-    {
-        for (int y = 0; y < width; y++)
-        {
-            if (!array[x][y].visit)
-            {
-                unsigned short color = array[x][y].color;
-                unsigned short count = 1;
-                Position pos = {x, y};
-                push(pos);
-                array[x][y].visit = true;
-
-                while (top > -1)
-                {
-                    Position Color;
-                    pop(&Color);
-                    int X = Color.x;
-                    int Y = Color.y;
-
-                    // above
-                    if (X > 0 && !array[X - 1][Y].visit && array[X - 1][Y].color == color)
-                    {
-                        push((Position){X - 1, Y});
-                        array[X - 1][Y].visit = true;
-                        count++;
-                    }
-                    // left
-                    if (Y > 0 && !array[X][Y - 1].visit && array[X][Y - 1].color == color)
-                    {
-                        push((Position){X, Y - 1});
-                        array[X][Y - 1].visit = true;
-                        count++;
-                    }
-                    // right
-                    if (Y < width - 1 && !array[X][Y + 1].visit && array[X][Y + 1].color == color)
-                    {
-                        push((Position){X, Y + 1});
-                        array[X][Y + 1].visit = true;
-                        count++;
-                    }
-                    // bottom
-                    if (X < height - 1 && !array[X + 1][Y].visit && array[X + 1][Y].color == color)
-                    {
-                        push((Position){X + 1, Y});
-                        array[X + 1][Y].visit = true;
-                        count++;
-                    }
-                }
-                newNodeP = newNode(color, count);
-                insertionSort(&head, newNodeP);
-            }
-        }
-    }
-    saveResults("results.txt", filename, head);
-    freeList(&head);
-}
-
+/***** Clusters functions *****/
 void SkipComments(FILE *fp)
 {
     int ch;
@@ -105,19 +15,6 @@ void SkipComments(FILE *fp)
     else
     {
         fseek(fp, -1, SEEK_CUR);
-    }
-}
-
-void printArray(Color **array, int width, int height)
-{
-    for (int i = 0; i < height; i++)
-    {
-        printf("%3d) ", i + 1);
-        for (int j = 0; j < width; j++)
-        {
-            printf("%3d ", array[i][j].color);
-        }
-        printf("\n");
     }
 }
 
@@ -167,6 +64,69 @@ Color **writeToArray(FILE *file, char *fileFormat, int width, int height)
     return array;
 }
 
+void countColors(Color **array, int width, int height, char *filename)
+{
+    Node *head = NULL;
+    Node *newNodeP = NULL;
+    StackNode *root = NULL;
+
+    for (int x = 0; x < height; x++)
+    {
+        for (int y = 0; y < width; y++)
+        {
+            if (!array[x][y].visit)
+            {
+                unsigned short color = array[x][y].color;
+                unsigned short count = 1;
+                Position pos = {x, y};
+                push(&root, pos);
+                array[x][y].visit = true;
+
+                while (!isEmpty(root))
+                {
+                    Position Color;
+                    pop(&root, &Color);
+                    int X = Color.x;
+                    int Y = Color.y;
+
+                    // above
+                    if (X > 0 && !array[X - 1][Y].visit && array[X - 1][Y].color == color)
+                    {
+                        push(&root, (Position){X - 1, Y});
+                        array[X - 1][Y].visit = true;
+                        count++;
+                    }
+                    // left
+                    if (Y > 0 && !array[X][Y - 1].visit && array[X][Y - 1].color == color)
+                    {
+                        push(&root, (Position){X, Y - 1});
+                        array[X][Y - 1].visit = true;
+                        count++;
+                    }
+                    // right
+                    if (Y < width - 1 && !array[X][Y + 1].visit && array[X][Y + 1].color == color)
+                    {
+                        push(&root, (Position){X, Y + 1});
+                        array[X][Y + 1].visit = true;
+                        count++;
+                    }
+                    // bottom
+                    if (X < height - 1 && !array[X + 1][Y].visit && array[X + 1][Y].color == color)
+                    {
+                        push(&root, (Position){X + 1, Y});
+                        array[X + 1][Y].visit = true;
+                        count++;
+                    }
+                }
+                newNodeP = newNode(color, count);
+                insertionSort(&head, newNodeP); // insert the node (color, count) into the list in the correct position
+            }
+        }
+    }
+    saveResults("results.txt", filename, head);
+    freeList(&head);
+}
+
 void freeArray(void **array, int size)
 {
     for (int i = 0; i < size; i++)
@@ -175,6 +135,59 @@ void freeArray(void **array, int size)
     }
     free(array);
     array = NULL;
+}
+
+void printArray(Color **array, int width, int height)
+{
+    for (int i = 0; i < height; i++)
+    {
+        printf("%3d) ", i + 1);
+        for (int j = 0; j < width; j++)
+        {
+            printf("%3d ", array[i][j].color);
+        }
+        printf("\n");
+    }
+}
+
+/***** Stack *****/
+StackNode *newStackNode(Position data)
+{
+    StackNode *stackNode = (StackNode *)malloc(sizeof(StackNode));
+    stackNode->data = data;
+    stackNode->next = NULL;
+    return stackNode;
+}
+
+bool isEmpty(StackNode *root)
+{
+    return !root;
+}
+
+void push(StackNode **root, Position data)
+{
+    StackNode *stackNode = newStackNode(data);
+    stackNode->next = *root;
+    *root = stackNode;
+}
+
+bool pop(StackNode **root, Position *data)
+{
+    if (isEmpty(*root))
+        return false;
+    StackNode *temp = *root;
+    *root = (*root)->next;
+    *data = temp->data;
+    free(temp);
+    return true;
+}
+
+bool peek(StackNode *root, Position *data)
+{
+    if (isEmpty(root))
+        return false;
+    *data = root->data;
+    return true;
 }
 
 /***** Linked list *****/

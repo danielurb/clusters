@@ -8,8 +8,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define SIZE 256
-
 typedef struct Position
 {
     short x;
@@ -22,7 +20,7 @@ typedef struct Color
     bool visit;
 } Color;
 
-// a node in linked list
+// A structure to represent a node in linked list
 typedef struct Node
 {
     unsigned short color;
@@ -30,15 +28,28 @@ typedef struct Node
     struct Node *next;
 } Node;
 
+// A structure to represent a node in stack
+typedef struct StackNode
+{
+    Position data;
+    struct StackNode *next;
+} StackNode;
+
+/***** Clusters functions *****/
 void SkipComments(FILE *fp);
 Color **writeToArray(FILE *file, char *fileFormat, int width, int height);
 void countColors(Color **array, int width, int height, char *filename);
 void freeArray(void **array, int size);
 void printArray(Color **array, int width, int height);
-// stack functions
-void push(Position pos);
-void pop(Position *pos);
-// linked list functions
+
+/***** Stack *****/
+StackNode *newStackNode(Position data);
+bool isEmpty(StackNode *root);
+void push(StackNode **root, Position data);
+bool pop(StackNode **root, Position *data);
+bool peek(StackNode *root, Position *data);
+
+/***** Linked list *****/
 void display(Node *node);
 Node *newNode(unsigned short color, unsigned short count);
 void insertionSort(Node **head, Node *newNode);

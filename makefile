@@ -15,10 +15,10 @@ main.out:
 	$(GCC) $(CFLAGS) main.c clusters.c -lm ## -lm link math library
 
 test: main.out
-	$(BUILD)/main.out img1.pbm
+	$(BUILD)/main.out images/img4.pgm
 
 clean:
 	$(RM) $(BUILD)/*.out
 
 memcheck:
-	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes  ./build/main.out img1.pbm
+	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes  ./build/main.out images/img4.pgm

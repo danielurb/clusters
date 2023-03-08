@@ -5,7 +5,6 @@ int main(int argc, char **argv)
     char filename[50];
     if (argc == 2)
     {
-
         strcpy(filename, argv[1]);
     }
     else if (argc > 2)
