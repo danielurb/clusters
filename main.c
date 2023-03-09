@@ -30,9 +30,9 @@ int main(int argc, char **argv)
     }
 
     fscanf(file, "%s", fileFormat);
-    SkipComments(file);
+    skipComments(file);
     fscanf(file, "%d %d", &width, &height);
-    SkipComments(file);
+    skipComments(file);
     if (strcmp(fileFormat, "P4") == 0)
     {
         colors = 2;
@@ -40,7 +40,7 @@ int main(int argc, char **argv)
     else if (strcmp(fileFormat, "P5") == 0)
     {
         fscanf(file, "%d", &colors);
-        SkipComments(file);
+        skipComments(file);
     }
     else
     {

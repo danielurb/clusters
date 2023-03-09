@@ -1,7 +1,7 @@
 #include "clusters.h"
 
 /***** Clusters functions *****/
-void SkipComments(FILE *fp)
+void skipComments(FILE *fp)
 {
     int ch;
     char line[100];
@@ -10,7 +10,7 @@ void SkipComments(FILE *fp)
     if (ch == '#')
     {
         fgets(line, sizeof(line), fp);
-        SkipComments(fp);
+        skipComments(fp);
     }
     else
     {

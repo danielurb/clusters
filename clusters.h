@@ -36,7 +36,7 @@ typedef struct StackNode
 } StackNode;
 
 /***** Clusters functions *****/
-void SkipComments(FILE *fp);
+void skipComments(FILE *fp);
 Color **writeToArray(FILE *file, char *fileFormat, int width, int height);
 void countColors(Color **array, int width, int height, char *filename);
 void freeArray(void **array, int size);
